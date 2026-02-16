@@ -56,8 +56,8 @@ start_time = datetime.now() - TIME_DELTAS[time_range]
 # ---- Main content ----
 st.title("IoT Anomaly Detection Dashboard")
 
-tab1, tab2, tab3, tab4 = st.tabs(
-    ["Real-Time View", "Root Cause Analysis", "Sensor Health", "Alert Log"]
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
+    ["Real-Time View", "Root Cause Analysis", "Sensor Health", "Alert Log", "Model Comparison"]
 )
 
 # ----- Tab 1: Real-Time View -----
@@ -210,6 +210,99 @@ with tab4:
         st.download_button("Export Alerts CSV", csv, "alerts_export.csv", "text/csv")
     else:
         st.info("No alerts in the selected time range.")
+
+# ----- Tab 5: Model Comparison -----
+with tab5:
+    st.header("Model Performance Comparison")
+    from pathlib import Path
+
+    eval_path = Path("data/evaluation_results.json")
+    if eval_path.exists():
+        with open(eval_path) as fh:
+            eval_results = json.load(fh)
+
+        metrics_df = pd.DataFrame(
+            [
+                {
+                    "Model": name,
+                    "Precision": results["precision"],
+                    "Recall": results["recall"],
+                    "F1 Score": results["f1"],
+                    "AUC-ROC": results["auc_roc"],
+                }
+                for name, results in eval_results.items()
+            ]
+        )
+
+        st.subheader("Performance Metrics")
+        st.dataframe(metrics_df, use_container_width=True)
+
+        # Radar chart
+        fig = go.Figure()
+        for name, results in eval_results.items():
+            fig.add_trace(
+                go.Scatterpolar(
+                    r=[results["precision"], results["recall"], results["f1"], results["auc_roc"]],
+                    theta=["Precision", "Recall", "F1", "AUC-ROC"],
+                    fill="toself",
+                    name=name,
+                )
+            )
+        fig.update_layout(polar={"radialaxis": {"visible": True, "range": [0, 1]}})
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Detection results by method
+        st.subheader("Detection Results by Method")
+        conn = get_db_connection()
+        method_query = (
+            "SELECT timestamp, detection_method, anomaly_score, sensor_id "
+            "FROM anomaly_log WHERE timestamp > ? ORDER BY timestamp"
+        )
+        method_df = pd.read_sql_query(method_query, conn, params=[start_time.isoformat()])
+        conn.close()
+
+        if not method_df.empty:
+            method_df["timestamp"] = pd.to_datetime(method_df["timestamp"])
+            fig = px.scatter(
+                method_df,
+                x="timestamp",
+                y="anomaly_score",
+                color="detection_method",
+                title="Anomaly Scores by Detection Method",
+                hover_data=["sensor_id"],
+            )
+            st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("Run model training and evaluation to see comparison results.")
+
+# ---- Sidebar export ----
+st.sidebar.markdown("---")
+st.sidebar.subheader("Export Options")
+
+if st.sidebar.button("Generate Full Report"):
+    report_data: dict = {
+        "generated_at": datetime.now().isoformat(),
+        "time_range": time_range,
+        "sensor_types": sensor_types,
+        "summary": {},
+    }
+    conn = get_db_connection()
+    summary_query = (
+        "SELECT COUNT(*) as total_readings, "
+        "SUM(CASE WHEN is_anomaly_ground_truth = 1 THEN 1 ELSE 0 END) as total_anomalies, "
+        "COUNT(DISTINCT sensor_id) as sensor_count "
+        "FROM sensor_readings WHERE timestamp > ?"
+    )
+    summary = pd.read_sql_query(summary_query, conn, params=[start_time.isoformat()])
+    conn.close()
+    report_data["summary"] = summary.iloc[0].to_dict()
+
+    st.sidebar.download_button(
+        "Download Report (JSON)",
+        json.dumps(report_data, indent=2, default=str),
+        f"anomaly_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        "application/json",
+    )
 
 # ---- Footer ----
 st.sidebar.markdown("---")
