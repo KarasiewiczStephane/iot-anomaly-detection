@@ -1,0 +1,29 @@
+database:
+  path: data/anomaly_detection.db
+
+sensors:
+  temperature: {min: 60, max: 80, unit: celsius}
+  vibration: {min: 0.1, max: 0.5, unit: g}
+  pressure: {min: 2, max: 4, unit: bar}
+  power: {min: 100, max: 150, unit: kW}
+
+anomaly:
+  injection_rate: 0.05
+  types: [point, contextual, collective]
+
+models:
+  isolation_forest: {contamination: 0.05, n_estimators: 100}
+  autoencoder: {hidden_dims: [32, 16, 8], epochs: 50, lr: 0.001}
+  dbscan: {eps: 0.5, min_samples: 5}
+  ensemble_weights: {isolation_forest: 0.4, autoencoder: 0.4, dbscan: 0.2}
+
+streaming:
+  queue_size: 1000
+  window_minutes: 60
+  latency_target_ms: 50
+
+alerting:
+  score_threshold: 0.8
+  frequency_threshold: {count: 5, minutes: 10}
+  cooldown_seconds: 300
+  webhook_url: null
