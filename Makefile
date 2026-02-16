@@ -1,4 +1,4 @@
-.PHONY: install test lint lint-fix clean run docker dashboard generate-data
+.PHONY: install test lint lint-fix clean run docker docker-run docker-stop dashboard generate-data
 
 install:
 	pip install -r requirements.txt
@@ -26,7 +26,13 @@ dashboard:
 	streamlit run src/dashboard/app.py
 
 docker:
-	docker build -t $(shell basename $(CURDIR)) .
+	docker build -t iot-anomaly-detection .
+
+docker-run:
+	docker compose up -d
+
+docker-stop:
+	docker compose down
 
 generate-data:
 	python -c "from src.data.generator import IoTDataGenerator; g = IoTDataGenerator(); df = g.generate(days=30); g.save_to_csv(df, 'data/generated/sensor_data.csv'); print(f'Generated {len(df)} rows')"
