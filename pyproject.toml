@@ -8,4 +8,5 @@ ignore = ["E501", "N803", "N806"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 asyncio_mode = "auto"

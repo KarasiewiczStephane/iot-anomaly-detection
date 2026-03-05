@@ -23,7 +23,7 @@ run:
 	python -m src.main
 
 dashboard:
-	streamlit run src/dashboard/app.py
+	PYTHONPATH=. streamlit run src/dashboard/app.py
 
 docker:
 	docker build -t iot-anomaly-detection .
@@ -36,3 +36,9 @@ docker-stop:
 
 generate-data:
 	python -c "from src.data.generator import IoTDataGenerator; g = IoTDataGenerator(); df = g.generate(days=30); g.save_to_csv(df, 'data/generated/sensor_data.csv'); print(f'Generated {len(df)} rows')"
+
+train:
+	python -m scripts.train_and_evaluate
+
+populate-db:
+	python -m scripts.populate_db

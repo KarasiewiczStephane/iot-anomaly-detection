@@ -15,6 +15,7 @@ venv/
 data/raw/
 *.csv
 *.parquet
+*.db
 !data/sample/
 
 # Models
