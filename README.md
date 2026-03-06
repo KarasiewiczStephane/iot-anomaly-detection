@@ -48,27 +48,31 @@ Real-time anomaly detection system for IoT sensor data, combining multiple ML ap
 ## Quick Start
 
 ```bash
-# Clone
+# Clone and install
 git clone git@github.com:KarasiewiczStephane/iot-anomaly-detection.git
 cd iot-anomaly-detection
+make install
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Generate sample data
+# Generate 30 days of synthetic sensor data
 make generate-data
 
-# Run the API server
-make run
+# Train Isolation Forest, Autoencoder, and DBSCAN models
+make train
 
-# Launch the dashboard
+# Populate the SQLite database with readings, anomaly scores, and alerts
+make populate-db
+
+# Launch the Streamlit dashboard (http://localhost:8501)
 make dashboard
+
+# Or start the FastAPI server instead (http://localhost:8000)
+make run
 ```
 
 ## Docker
 
 ```bash
-# Build and start all services
+# Build and start API + dashboard services
 make docker-run
 
 # Stop services
@@ -103,6 +107,7 @@ iot-anomaly-detection/
 │   ├── streaming/      # Async streaming pipeline and real-time scorer
 │   └── utils/          # Config, logging, database utilities
 ├── tests/              # Unit tests (160+ tests, >80% coverage)
+├── scripts/            # Training, DB population, and utility scripts
 ├── configs/            # YAML configuration
 ├── .github/workflows/  # CI/CD pipeline
 ├── Dockerfile
@@ -123,6 +128,9 @@ make lint
 
 # Auto-fix lint issues
 make lint-fix
+
+# Regenerate data, retrain, and repopulate the dashboard DB
+make generate-data && make train && make populate-db
 ```
 
 ## Tech Stack
