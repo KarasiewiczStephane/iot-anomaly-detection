@@ -1,6 +1,8 @@
 # IoT Anomaly Detection
 
-Real-time anomaly detection system for IoT sensor data, combining multiple ML approaches with an ensemble scoring engine.
+> Real-time anomaly detection on IoT sensor streams — applicable to environmental monitoring, climate sensors, and industrial telemetry.
+
+Multi-model ensemble system combining Isolation Forest, PyTorch Autoencoder, and DBSCAN with weighted scoring.
 
 ## Architecture
 
@@ -141,6 +143,10 @@ make generate-data && make train && make populate-db
 - **Data**: Pandas, NumPy
 - **Storage**: SQLite
 - **CI/CD**: GitHub Actions, Docker
+
+## Author
+
+**Stéphane Karasiewicz** — [skarazdata.com](https://skarazdata.com) | [LinkedIn](https://www.linkedin.com/in/stephane-karasiewicz/)
 
 ## License
 
